@@ -1,68 +1,96 @@
-// src/types/index.ts
-
-// backend ke "users" table se match — password_hash kabhi frontend pe nahi aata
+export type Role = "candidate" | "employer" | "admin";
 export interface User {
-  id: string; // O(1) — UUID string
+  id: string;
   name: string;
   email: string;
-  role: "candidate" | "employer" | "admin"; // backend ke enum se match
-  company_name: string | null; // sirf employer ke paas hota hai
-  logo_url: string | null;
+  role: Role;
+  company_name?: string | null;
+  logo_url?: string | null;
+  email_verified: boolean;
+  status?: string;
   created_at: string;
 }
-
-// backend ke "jobs" table se match
 export interface Job {
   id: string;
   employer_id: string;
   title: string;
   description: string;
-  location: string;
-  job_type: string; // default "full-time" backend se aata hai
+  location?: string | null;
+  job_type: string;
   salary_min: number | null;
   salary_max: number | null;
   status: "open" | "closed";
+  work_mode?: string;
+  experience_level?: string;
+  skills?: string[];
+  moderation_status?: string;
+  revision: number;
+  expires_at?: string | null;
   created_at: string;
 }
-
-// backend ke "applications" table se match
 export interface Application {
   id: string;
   job_id: string;
   candidate_id: string;
-  resume_url: string;
-  cover_letter: string | null;
-  status: string; // default "pending"
+  cover_letter?: string | null;
+  status: string;
   created_at: string;
-  jobs?: Job; // nested select jab /applications/my call hoti hai
+  jobs?: Job | null;
+  users?: { name: string; email: string } | null;
 }
-
-// backend ka paginated response format (Day 8 mein banaya tha)
-export interface PaginatedJobs {
+export interface PageData<T> {
   success: boolean;
-  count: number;
+  data: T[];
   total: number;
   page: number;
   totalPages: number;
-  jobs: Job[]; // "data" nahi — "jobs" hai backend response mein
+  count: number;
 }
-
-// backend ka error response format (errorHandler.js se match)
-export interface ApiErrorResponse {
-  status: string;
-  message: string;
-  errors?: { path: string; message: string }[]; // Zod field-wise errors
+export interface PaginatedJobs {
+  success: boolean;
+  jobs: Job[];
+  total: number;
+  page: number;
+  totalPages: number;
+  count: number;
 }
-
-export interface ApplicationWithCandidate {
+export interface SavedJob {
   id: string;
-  candidate_id: string;
-  resume_url: string;
-  cover_letter: string | null;
+  job_id: string;
+  jobs: Job | null;
+}
+export interface Notice {
+  id: string;
+  title: string;
+  message: string;
+  read_at: string | null;
+  created_at: string;
+  resource_type?: string;
+  resource_id?: string;
+}
+export interface Report {
+  id: string;
+  job_id: string;
+  reason: string;
+  details: string;
   status: string;
   created_at: string;
-  users: {
-    name: string;
-    email: string;
-  };
+  jobs?: Job | null;
+}
+export interface Session {
+  id: string;
+  current: boolean;
+  user_agent: string;
+  created_at: string;
+  last_used_at: string;
+  expires_at: string;
+}
+export interface Audit {
+  id: string;
+  action: string;
+  actor_id: string;
+  target_id: string;
+  outcome: string;
+  created_at: string;
+  details: Record<string, unknown>;
 }

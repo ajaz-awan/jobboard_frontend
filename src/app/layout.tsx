@@ -1,32 +1,33 @@
-// src/app/layout.tsx
-import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import type { Metadata } from "next";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
-
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["500", "600", "700"],
-});
-const body = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "500"],
-});
-
+import "./themes.css";
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
+  title: {
+    default: "Jobboard — Find your next chapter.",
+    template: "%s | Jobboard",
+  },
+  description:
+    "A thoughtful place to find your next opportunity, grow your career, and build your team.",
+};
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('jobboard-theme');document.documentElement.dataset.theme=t==='light'||t==='dark'?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){document.documentElement.dataset.theme='light'}})()`,
+          }}
+        />
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
         <AuthProvider>
           <Navbar />
           {children}

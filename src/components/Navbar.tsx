@@ -1,90 +1,128 @@
-// src/components/Navbar.tsx
 "use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-
+import Icon from "./Icon";
+import ThemeToggle from "./ThemeToggle";
+import { errorMessage } from "@/lib/api";
 export default function Navbar() {
-  const { user, loading, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+  const pathname = usePathname();
   const router = useRouter();
-
-  function handleLogout() {
-    logout();
-    router.push("/login");
-  }
-
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
   return (
-    <nav className="bg-[var(--paper-raised)] border-b border-[var(--line)] px-6 py-4 sticky top-0 z-20">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/" className="font-display text-xl font-bold text-[var(--ink)]">
-          Job<span className="text-[var(--accent)]">Board</span>
-        </Link>
-
-        <div className="flex items-center gap-6">
-          <Link
-            href="/jobs"
-            className="text-sm font-medium text-[var(--ink-muted)] hover:text-[var(--primary)] transition-colors"
-          >
-            Browse Jobs
+    <>
+      <header className="site-header">
+        <div className="header-inner">
+          <Link href="/" className="brand" aria-label="Jobboard home">
+            <span className="brand-symbol">
+              j<span>↗</span>
+            </span>
+            jobboard<span className="brand-dot">.</span>
           </Link>
-
-          {loading ? null : user ? (
-            <>
-              {user.role === "employer" && (
-                <>
-                  <Link
-                    href="/dashboard/my-jobs"
-                    className="text-sm font-medium text-[var(--ink-muted)] hover:text-[var(--primary)] transition-colors"
-                  >
-                    My Jobs
-                  </Link>
-                  <Link
-                    href="/dashboard/post-job"
-                    className="text-sm font-medium text-[var(--ink-muted)] hover:text-[var(--primary)] transition-colors"
-                  >
-                    Post a Job
-                  </Link>
-                </>
-              )}
-              {user.role === "candidate" && (
+          <nav className="desktop-nav" aria-label="Main navigation">
+            <Link
+              className={pathname === "/jobs" ? "selected" : ""}
+              href="/jobs"
+            >
+              Find a job
+            </Link>
+            <Link href="/for-employers">For employers</Link>
+            <Link href="/about">Why jobboard?</Link>
+          </nav>
+          <div className="header-actions">
+            <ThemeToggle />
+            {user ? (
+              <>
                 <Link
-                  href="/dashboard/applications"
-                  className="text-sm font-medium text-[var(--ink-muted)] hover:text-[var(--primary)] transition-colors"
+                  href="/dashboard/notifications"
+                  className="icon-btn"
+                  aria-label="Notifications"
                 >
-                  My Applications
+                  <Icon name="bell" />
                 </Link>
-              )}
-
-              <span className="font-mono text-xs text-[var(--ink-muted)] hidden sm:inline">
-                {user.name}
-              </span>
-
-              <button
-                onClick={handleLogout}
-                className="text-sm font-medium px-4 py-1.5 rounded-md border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--paper)] transition-colors"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="text-sm font-medium text-[var(--ink-muted)] hover:text-[var(--primary)] transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-medium px-4 py-1.5 rounded-md bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors"
-              >
-                Register
-              </Link>
-            </>
-          )}
+                <Link href="/dashboard" className="btn primary small workspace-link" aria-label="My workspace">
+                  <span className="workspace-link-label">My workspace</span> <Icon name="arrow" size={16} />
+                </Link>
+                <button
+                  className="icon-btn desktop-logout"
+                  aria-label="Sign out"
+                  onClick={async () => {
+                    try {
+                      await logout();
+                      router.push("/");
+                    } catch (e) {
+                      setError(errorMessage(e));
+                    }
+                  }}
+                >
+                  <Icon name="logout" />
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className="login-link" href="/login">
+                  {loading ? "Sign in" : "Log in"}
+                </Link>
+                <Link href="/register" className="btn primary small">
+                  Get started <Icon name="arrow" size={16} />
+                </Link>
+              </>
+            )}
+            <button
+              className="icon-btn mobile-toggle"
+              aria-label="Toggle navigation"
+              aria-expanded={open}
+              onClick={() => setOpen(!open)}
+            >
+              <Icon name={open ? "close" : "menu"} />
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+        {open && (
+          <nav
+            className="mobile-nav"
+            aria-label="Mobile navigation"
+            onClick={() => setOpen(false)}
+          >
+            <Link href="/jobs">Find a job</Link>
+            <Link href="/for-employers">For employers</Link>
+            <Link href="/about">Why jobboard?</Link>
+            {!user && <Link href="/login">Log in</Link>}
+            {user && (
+              <>
+                <Link href="/dashboard">My workspace</Link>
+                <button
+                  onClick={async () => {
+                    try {
+                      await logout();
+                      router.push("/");
+                    } catch (e) {
+                      setError(errorMessage(e));
+                    }
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
+            )}
+          </nav>
+        )}
+      </header>
+      {error && (
+        <div className="alert" role="alert">
+          {error}
+          <button
+            className="icon-btn"
+            aria-label="Dismiss"
+            onClick={() => setError("")}
+          >
+            <Icon name="close" size={15} />
+          </button>
+        </div>
+      )}
+    </>
   );
 }
